@@ -1,0 +1,48 @@
+/YouTube | Tech at Home
+
+int sensor_pin = A0;
+
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(sensor_pin, INPUT);
+}
+
+
+void loop()
+{
+  int sensor_data = analogRead(sensor_pin);
+  //Serial.print("Sensor_data:");
+  Serial.print(sensor_data);
+  Serial.print("\t | ");
+  
+  int numReads = 1000;
+
+  int senseSum = 0;
+
+  for(int k = 0; k < numReads; k++){
+    senseSum += sensor_data;
+    delay(1);
+  }
+
+  int senseAve = senseSum / numReads;
+  Serial.println( senseAve);
+  delay(200);
+
+  int sense2bright = map(senseAve, 0, 1023, 0, 255);
+
+   if(senseAve > 950)
+   {
+     Serial.println("No moisture, Soil is dry");
+     }
+   else if(senseAve >= 400 && senseAve <= 950)
+   {
+   Serial.println("There is some moisture, Soil is medium");
+  }
+  else if(senseAve < 400)
+  {
+   Serial.println("Soil is wet");
+  }
+
+ // delay(100);
+}
