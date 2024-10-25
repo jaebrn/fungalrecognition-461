@@ -10,13 +10,13 @@ long previousReading = 0;
 int cycles = 0; // count of readings 
 bool touchState = false; // false when no touch, true when touched
 bool previousState = false;
-uint8_t LED = 8; // indicator led (on when touched, off when no touch)
+//uint8_t LED = 8; // indicator led (on when touched, off when no touch)
 
 void setup() {
   sensorA.set_CS_AutocaL_Millis(1000); // may want to play with this value 
   Serial.begin(115200);
-  pinMode(LED, OUTPUT);
-  digitalWrite(LED,LOW);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN,LOW);
 }
 
 void loop() {
@@ -33,12 +33,12 @@ void loop() {
   }
 
 //State change based on relation to previous measurement
-  if(measurementA>10+(previousReading * 2)){
+  if(measurementA>60+(previousReading * 2)){
     touchState = true;
-    digitalWrite(LED,HIGH);
+    digitalWrite(LED_BUILTIN,HIGH);
   }else if(measurementA<(previousReading * 0.5)){
     touchState = false;
-    digitalWrite(LED,LOW);
+    digitalWrite(LED_BUILTIN,LOW);
   }
 
   if(previousState!= touchState){
