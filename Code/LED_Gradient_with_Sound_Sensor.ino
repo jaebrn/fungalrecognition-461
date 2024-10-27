@@ -38,11 +38,11 @@ const uint16_t ledCount = 60;
 rgb_color colors[ledCount];
 
 // Set the brightness to use (the maximum is 31).
-const uint8_t brightness = 15;
+const uint8_t maxBrightness = 30;
 
 void setup()
 {
-    pinMode(digitalPin,INPUT); 
+  pinMode(digitalPin,INPUT); 
   pinMode(analogPin, INPUT);
   pinMode(ledPin,OUTPUT);      
   Serial.begin(9600);
@@ -53,14 +53,16 @@ void loop()
 
    // Read the sound level and store it in valueSound
     int valueSound = sound();
-    Serial.println(valueSound);  // Print the sound level to the serial monitor
+    // Print the sound level to the serial monitor
 
     // Update the LED colors based on the sound level
     color(valueSound);
 }
 
-void color(){
-   uint8_t time = millis() >> 2;
+void color(int valueSound){
+  uint8_t time = millis() >> 2;
+  uint8_t brightness = map(valueSound, 0, 1023, 0, maxBrightness);
+  Serial.println(brightness);
   for(uint16_t i = 0; i < ledCount; i++)
   {
    uint8_t x = time - i * 8.5;  // Determine color value based on time
@@ -70,6 +72,7 @@ void color(){
 
      // Write the color data to the LED strip
     ledStrip.write(colors, ledCount, brightness);
+   
 
   delay(10);
 
