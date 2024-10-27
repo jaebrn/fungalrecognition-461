@@ -14,9 +14,9 @@ This example shows how to display a moving gradient pattern on
  * boards but might be slow.   */
 
 
-//to support faster update rates
-
+//Libraries
 #include <APA102.h>
+#include <CapacitiveSensor.h>
 
 int digitalPin = 7;   // KY-037 digital interface
 int analogPin = A0;   // KY-037 analog interface
@@ -38,14 +38,26 @@ const uint16_t ledCount = 60;
 rgb_color colors[ledCount];
 
 // Set the brightness to use (the maximum is 31).
-const uint8_t maxBrightness = 30;
+const uint8_t brightness = 15;
+
+//Capacitive Sensor:
+CapacitiveSensor sensorA = CapacitiveSensor(4,2);  // 1M resistor between pins 4 & 2, pin 2 is sensor pin
+long previousReading = 0;
+int cycles = 0; // count of readings 
+bool touchState = false; // false when no touch, true when touched
+bool previousState = false;
 
 void setup()
 {
   pinMode(digitalPin,INPUT); 
   pinMode(analogPin, INPUT);
   pinMode(ledPin,OUTPUT);      
-  Serial.begin(9600);
+  //Serial.begin(9600);
+
+  sensorA.set_CS_AutocaL_Millis(1000); // may want to play with this value 
+  Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN,LOW);
 }
 
 void loop()
@@ -53,16 +65,46 @@ void loop()
 
    // Read the sound level and store it in valueSound
     int valueSound = sound();
-    // Print the sound level to the serial monitor
+    Serial.println(valueSound);  // Print the sound level to the serial monitor
 
     // Update the LED colors based on the sound level
     color(valueSound);
+
+    long measurementA =  sensorA.capacitiveSensor(30); // take measurement
+  Serial.println(); //debug
+  Serial.print("Sensor A: ");
+  Serial.print(measurementA);
+
+//periodic recalibration every x cycles
+  if(cycles>=50){
+    sensorA.set_CS_AutocaL_Millis(1000);
+    cycles = 0; //reset cycles
+    Serial.println("recalibrating");
+  }
+
+//State change based on relation to previous measurement
+  if(measurementA>10+(previousReading * 2)){
+    touchState = true;
+    digitalWrite(LED,HIGH);
+  }else if(measurementA<(previousReading * 0.5)){
+    touchState = false;
+    digitalWrite(LED,LOW);
+  }
+
+  if(previousState!= touchState){
+    Serial.println("STATE CHANGED: TouchState = ");
+    Serial.print(touchState);
+
+  previousState = touchState;
+  }
+
+  delay(200);
+  previousReading = measurementA;
+  cycles++;
 }
 
-void color(int valueSound){
-  uint8_t time = millis() >> 2;
-  uint8_t brightness = map(valueSound, 0, 1023, 0, maxBrightness);
-  Serial.println(brightness);
+void color(){
+   uint8_t time = millis() >> 2;
   for(uint16_t i = 0; i < ledCount; i++)
   {
    uint8_t x = time - i * 8.5;  // Determine color value based on time
@@ -72,7 +114,6 @@ void color(int valueSound){
 
      // Write the color data to the LED strip
     ledStrip.write(colors, ledCount, brightness);
-   
 
   delay(10);
 
